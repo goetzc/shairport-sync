@@ -48,7 +48,6 @@ enum alsa_backend_mode {
 } alsa_backend_state; // under the control of alsa_mutex
 
 typedef struct {
-	enum sps_format_t format;
 	snd_pcm_format_t alsa_code;
 	int frame_size;
 } format_record;
@@ -370,12 +369,62 @@ int actual_open_alsa_device(void) {
   }
   
   snd_pcm_format_t sf;
-  // This array is of all the formats known to Shairport Sync, their equivalent alsa codes and their frame sizes.
+  // This array is of all the formats known to Shairport Sync, in order of the SPS_FORMAT definitions, with their equivalent alsa codes and their frame sizes.
   // If just one format is requested, then its entry is searched for in the array and checked on the device
   // If auto format is requested, then each entry in turn is tried until a working format is found.
   // So, it should be in the search order.
   
-  format_record fr[] = {{SPS_FORMAT_S8,SND_PCM_FORMAT_S8,2},{SPS_FORMAT_U8,SND_PCM_FORMAT_U8,2},{SPS_FORMAT_S16,SND_PCM_FORMAT_S16,4},{SPS_FORMAT_S16_LE,SND_PCM_FORMAT_S16,4}};
+  format_record fr[] = {
+    {SND_PCM_FORMAT_UNKNOWN,0}, // unknown
+    {SND_PCM_FORMAT_S8,2},
+    {SND_PCM_FORMAT_U8,2},
+    {SND_PCM_FORMAT_S16,4},
+    {SND_PCM_FORMAT_S16_LE,4},
+    {SND_PCM_FORMAT_S16_BE,4},
+    {SND_PCM_FORMAT_S24,4},
+    {SND_PCM_FORMAT_S24_LE,8},
+    {SND_PCM_FORMAT_S24_BE,8},
+    {SND_PCM_FORMAT_S24_3LE,6},
+    {SND_PCM_FORMAT_S24_3BE,6},
+    {SND_PCM_FORMAT_S32,8},
+    {SND_PCM_FORMAT_S32_LE,8},
+    {SND_PCM_FORMAT_S32_BE,8},
+    {SND_PCM_FORMAT_UNKNOWN,0}, // auto
+    {SND_PCM_FORMAT_UNKNOWN,0}, // illegal
+  };
+  
+  enum sps_format_t auto_format_without_hardware_mixer_check_sequence[] = {
+    SPS_FORMAT_S32,
+    SPS_FORMAT_S32_LE,
+    SPS_FORMAT_S32_BE,
+    SPS_FORMAT_S24,
+    SPS_FORMAT_S24_LE,
+    SPS_FORMAT_S24_BE,  
+    SPS_FORMAT_S24_3LE,
+    SPS_FORMAT_S24_3BE,
+    SPS_FORMAT_S16,
+    SPS_FORMAT_S16_LE,
+    SPS_FORMAT_S16_BE,
+    SPS_FORMAT_S8,
+    SPS_FORMAT_U8,
+  };
+  
+  enum sps_format_t auto_format_with_hardware_mixer_check_sequence[] = {
+    SPS_FORMAT_S16,
+    SPS_FORMAT_S16_LE,
+    SPS_FORMAT_S16_BE,
+    SPS_FORMAT_S32,
+    SPS_FORMAT_S32_LE,
+    SPS_FORMAT_S32_BE,
+    SPS_FORMAT_S24,
+    SPS_FORMAT_S24_LE,
+    SPS_FORMAT_S24_BE,  
+    SPS_FORMAT_S24_3LE,
+    SPS_FORMAT_S24_3BE,
+    SPS_FORMAT_S8,
+    SPS_FORMAT_U8,
+  };
+
   switch (sample_format) {
   case SPS_FORMAT_S8:
     sf = SND_PCM_FORMAT_S8;
