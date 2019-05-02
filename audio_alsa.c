@@ -47,6 +47,12 @@ enum alsa_backend_mode {
   abm_playing
 } alsa_backend_state; // under the control of alsa_mutex
 
+typedef struct {
+	enum sps_format_t format;
+	snd_pcm_format_t alsa_code;
+	int frame_size;
+} format_record;
+
 static void help(void);
 static int init(int argc, char **argv);
 static void deinit(void);
@@ -73,6 +79,7 @@ audio_output audio_alsa = {
     .help = &help,
     .init = &init,
     .deinit = &deinit,
+    .prepare = NULL,
     .start = &start,
     .stop = &stop,
     .is_running = NULL,
@@ -363,6 +370,12 @@ int actual_open_alsa_device(void) {
   }
   
   snd_pcm_format_t sf;
+  // This array is of all the formats known to Shairport Sync, their equivalent alsa codes and their frame sizes.
+  // If just one format is requested, then its entry is searched for in the array and checked on the device
+  // If auto format is requested, then each entry in turn is tried until a working format is found.
+  // So, it should be in the search order.
+  
+  format_record fr[] = {{SPS_FORMAT_S8,SND_PCM_FORMAT_S8,2},{SPS_FORMAT_U8,SND_PCM_FORMAT_U8,2},{SPS_FORMAT_S16,SND_PCM_FORMAT_S16,4},{SPS_FORMAT_S16_LE,SND_PCM_FORMAT_S16,4}};
   switch (sample_format) {
   case SPS_FORMAT_S8:
     sf = SND_PCM_FORMAT_S8;
@@ -955,6 +968,7 @@ static int init(int argc, char **argv) {
         config.alsa_use_hardware_mute = 0;
       }
     }
+        
 
     /* Get the output format, using the same names as aplay does*/
     if (config_lookup_string(config.cfg, "alsa.output_format", &str)) {
@@ -984,6 +998,8 @@ static int init(int argc, char **argv) {
         config.output_format = SPS_FORMAT_U8;
       else if (strcasecmp(str, "S8") == 0)
         config.output_format = SPS_FORMAT_S8;
+      else if (strcasecmp(str, "auto") == 0)
+        config.output_format_auto_requested = 1;
       else {
         warn("Invalid output format \"%s\". It should be \"U8\", \"S8\", "
              "\"S16\", \"S24\", \"S24_LE\", \"S24_BE\", "
@@ -993,23 +1009,28 @@ static int init(int argc, char **argv) {
       }
     }
 
-    /* Get the output rate, which must be a multiple of 44,100*/
-    if (config_lookup_int(config.cfg, "alsa.output_rate", &value)) {
-      debug(1, "alsa output rate is %d frames per second", value);
-      switch (value) {
-      case 44100:
-      case 88200:
-      case 176400:
-      case 352800:
-        config.output_rate = value;
-        break;
-      default:
-        warn("Invalid output rate \"%d\". It should be a multiple of 44,100 up "
-             "to 352,800. It is "
-             "set to 44,100",
-             value);
-        config.output_rate = 44100;
-      }
+    if (config_lookup_string(config.cfg, "alsa.output_rate", &str)) {
+			if (strcasecmp(str, "auto") == 0) {
+				config.output_rate_auto_requested = 1;
+			} else {
+				/* Get the output rate, which must be a multiple of 44,100*/
+				if (config_lookup_int(config.cfg, "alsa.output_rate", &value)) {
+					debug(1, "alsa output rate is %d frames per second", value);
+					switch (value) {
+					case 44100:
+					case 88200:
+					case 176400:
+					case 352800:
+						config.output_rate = value;
+						break;
+					default:
+						warn("Invalid output rate \"%d\". It should be \"auto\" or a multiple of 44,100 up "
+								 "to 352,800. It is "
+								 "set to %d.",
+								 value,config.output_rate);
+					}
+				}
+			}
     }
 
     /* Get the use_mmap_if_available setting. */
@@ -1072,11 +1093,11 @@ static int init(int argc, char **argv) {
       else if ((strcasecmp(str, "yes") == 0) || (strcasecmp(str, "on") == 0) || (strcasecmp(str, "always") == 0)) {
         config.disable_standby_mode = disable_standby_always;
         config.keep_dac_busy = 1;
-      } else if (strcasecmp(str, "while_active") == 0)
-        config.disable_standby_mode = disable_standby_while_active;
+      } else if (strcasecmp(str, "auto") == 0)
+        config.disable_standby_mode = disable_standby_auto;
       else {
         warn("Invalid disable_standby_mode option choice \"%s\". It should be "
-             "\"always\", \"while_active\" or \"never\". "
+             "\"always\", \"auto\" or \"never\". "
              "It is set to \"never\".");
       }
     }
@@ -1097,7 +1118,7 @@ static int init(int argc, char **argv) {
       }
     }
 
-    debug(1, "alsa: disable_standby_mode is \"%s\".", config.disable_standby_mode == disable_standby_off ? "never" : config.disable_standby_mode == disable_standby_always ? "always" : "while_active");
+    debug(1, "alsa: disable_standby_mode is \"%s\".", config.disable_standby_mode == disable_standby_off ? "never" : config.disable_standby_mode == disable_standby_always ? "always" : "auto");
   }
 
   optind = 1; // optind=0 is equivalent to optind=1 plus special behaviour

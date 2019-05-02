@@ -687,6 +687,9 @@ static inline void process_sample(int32_t sample, char **outp, enum sps_format_t
     case SPS_FORMAT_UNKNOWN:
       die("Unexpected SPS_FORMAT_UNKNOWN while calculating dither mask.");
       break;
+    case SPS_FORMAT_AUTO:
+      die("Unexpected SPS_FORMAT_AUTO while calculating dither mask.");
+      break;
     case SPS_FORMAT_INVALID:
       die("Unexpected SPS_FORMAT_INVALID while calculating dither mask.");
       break;
@@ -828,6 +831,9 @@ static inline void process_sample(int32_t sample, char **outp, enum sps_format_t
     break;
   case SPS_FORMAT_UNKNOWN:
     die("Unexpected SPS_FORMAT_UNKNOWN while outputting samples");
+    break;
+  case SPS_FORMAT_AUTO:
+    die("Unexpected SPS_FORMAT_AUTO while outputting samples");
     break;
   case SPS_FORMAT_INVALID:
     die("Unexpected SPS_FORMAT_INVALID while outputting samples");
@@ -1767,8 +1773,11 @@ void *player_thread_func(void *arg) {
   case SPS_FORMAT_UNKNOWN:
     die("Unknown format choosing output bit depth");
     break;
+  case SPS_FORMAT_AUTO:
+    die("Invalid format -- SPS_FORMAT_AUTO -- choosing output bit depth");
+    break;
   case SPS_FORMAT_INVALID:
-    die("Invalid format choosing output bit depth");
+    die("Invalid format -- SPS_FORMAT_INVALID -- choosing output bit depth");
     break;
   }
 

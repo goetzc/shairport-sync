@@ -1710,10 +1710,14 @@ int main(int argc, char **argv) {
         config.playback_mode);
   debug(1, "disable_synchronization is %d.", config.no_sync);
   debug(1, "use_mmap_if_available is %d.", config.no_mmap ? 0 : 1);
-  debug(1, "output_rate is %d.", config.output_rate);
-  debug(1,
+  debug(1, "output_format automatic selection is %sabled.", config.output_format_auto_requested ? "en" : "dis");
+  if (config.output_format_auto_requested == 0)
+  	debug(1,
         "output_format is \"%s\".",
         sps_format_description_string(config.output_format));
+  debug(1, "output_rate automatic selection is %sabled.", config.output_rate_auto_requested ? "en" : "dis");
+  if (config.output_rate_auto_requested == 0)
+  	debug(1, "output_rate is %d.", config.output_rate);
   debug(1, "audio backend desired buffer length is %f seconds.",
         config.audio_backend_buffer_desired_length);
   debug(1, "audio_backend_buffer_interpolation_threshold_in_seconds is %f seconds.", config.audio_backend_buffer_interpolation_threshold_in_seconds);
