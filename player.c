@@ -1794,6 +1794,7 @@ void *player_thread_func(void *arg) {
   if ((config.output->parameters == NULL) || (conn->input_bit_depth > output_bit_depth) ||
       (config.playback_mode == ST_mono))
     conn->enable_dither = 1;
+  
 
   // remember, the output device may never have been initialised prior to this call
   config.output->start(config.output_rate, config.output_format); // will need a corresponding stop
@@ -2933,6 +2934,10 @@ int player_play(rtsp_conn_info *conn) {
   activity_monitor_signify_activity(
       1); // active, and should be before play's command hook, command_start()
   command_start();
+  // call on the output device to prepare itself
+  if ((config.output) && (config.output->prepare))
+  	config.output->prepare();
+  
   pthread_t *pt = malloc(sizeof(pthread_t));
   if (pt == NULL)
     die("Couldn't allocate space for pthread_t");
