@@ -226,7 +226,7 @@ void* soxr_time_check(__attribute__((unused)) void *arg) {
   // free(outbuffer);
   // free(inbuffer);
   config.soxr_delay_index = (int)(0.9 + soxr_execution_time_us/(number_of_iterations *1000));
-  debug(1,"soxr_delay_index: %d.", config.soxr_delay_index);
+  debug(2,"soxr_delay_index: %d.", config.soxr_delay_index);
   if ((config.packet_stuffing == ST_soxr) && (config.soxr_delay_index > config.soxr_delay_threshold))
   	inform("Note: this device may be too slow for \"soxr\" interpolation. Consider choosing the \"basic\" or \"auto\" interpolation setting.");
   if (config.packet_stuffing == ST_auto)

@@ -667,7 +667,7 @@ int actual_open_alsa_device(int do_auto_setup) {
   else if (config.use_precision_timing == YNA_AUTO) {
     if (precision_delay_available()) {
       delay_and_status = precision_delay_and_status;
-      debug(1,"alsa: precision timing selected for \"auto\" mode");
+      debug(2,"alsa: precision timing selected for \"auto\" mode");
     }
   }
 
@@ -1301,7 +1301,7 @@ int set_mute_state() {
   return response;
 }
 
-static void start(int i_sample_rate, int i_sample_format) {
+static void start(__attribute__((unused)) int i_sample_rate, __attribute__((unused)) int i_sample_format) {
   debug(3, "audio_alsa start called.");
   
   /*
@@ -1396,7 +1396,7 @@ int precision_delay_and_status(snd_pcm_state_t *state, snd_pcm_sframes_t *delay,
       } else {
 // diagnostic
         if (delay_type_notified != 0) {
-          debug(1,"alsa: delay_and_status using snd_pcm_status_get_delay() to calculate delay");
+          debug(2,"alsa: delay_and_status using snd_pcm_status_get_delay() to calculate delay");
           delay_type_notified = 0;
         }
       }
