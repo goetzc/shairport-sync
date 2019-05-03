@@ -1426,7 +1426,9 @@ int main(int argc, char **argv) {
   config.udp_port_base = 6001;
   config.udp_port_range = 10;
   config.output_format = SPS_FORMAT_S16_LE; // default
+  config.output_format_auto_requested = 1;  // default auto select format
   config.output_rate = 44100;               // default
+  config.output_rate_auto_requested = 1;    // default auto select format
   config.decoders_supported =
       1 << decoder_hammerton; // David Hammerton's decoder supported by default
 #ifdef CONFIG_APPLE_ALAC
