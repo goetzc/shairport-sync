@@ -27,6 +27,9 @@ body:
       description: Please give some information about the system hardware -- make and model would be useful, e.g. Raspberry Pi 4 (4 GB). Also, the make and model of the output DAC, if known.
     validations:
       required: true
+  - type: markdown
+    attributes:
+      value: "## Markdown Test -- Please Ignore!"
   - type: textarea
     id: version
     attributes:
